@@ -108,11 +108,14 @@ export function InitializeStep({ onContinue }: InitializeStepProps) {
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="group relative border-2 border-ink-black/20 overflow-hidden bg-silver-halide hover:border-ink-black transition-colors"
+                      className="group relative border-2 border-ink-black/20 overflow-hidden bg-[#f4f4f5] hover:border-ink-black transition-colors aspect-[1/2] flex items-center justify-center p-3"
                     >
+                      {/* Checkerboard background to show transparent frames well */}
+                      <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(45deg,#000_25%,transparent_25%,transparent_75%,#000_75%,#000),linear-gradient(45deg,#000_25%,transparent_25%,transparent_75%,#000_75%,#000)] bg-[length:12px_12px] bg-[position:0_0,6px_6px]" />
+                      
                       <img
                         src={session.thumbnailDataUrl}
-                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-500 relative z-10"
                         alt={`Session from ${new Date(session.timestamp).toLocaleDateString()}`}
                       />
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-ink-black/90 to-transparent p-3 pt-8 translate-y-full group-hover:translate-y-0 transition-transform">

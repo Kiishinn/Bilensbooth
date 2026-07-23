@@ -22,7 +22,7 @@ interface DarkroomStepProps {
   onBack: () => void;
 }
 
-const FILTERS: FilterType[] = ['raw', 'bw', 'sepia', 'cross', 'lomo', 'expired'];
+const FILTERS: FilterType[] = ['raw', 'bw', 'sepia', 'cross', 'lomo', 'expired', 'lightleak', 'paper'];
 type TabType = 'frame' | 'filter' | 'text' | 'stickers';
 
 export function DarkroomStep({
@@ -72,6 +72,20 @@ export function DarkroomStep({
     };
     onStickersChange([...stickers, newSticker]);
     setSelectedStickerId(newSticker.id);
+  };
+
+  const handleUploadSticker = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const url = event.target?.result as string;
+      if (url) handleAddSticker(url);
+    };
+    reader.readAsDataURL(file);
+    // Reset input
+    e.target.value = '';
   };
 
   const handleUpdateSticker = (id: string, updates: Partial<StickerData>) => {
@@ -204,7 +218,13 @@ export function DarkroomStep({
 
             {activeTab === 'stickers' && (
               <div className="space-y-4">
-                <h3 className="font-mono text-[10px] font-bold text-ink-black/40 tracking-[0.2em]">TAMBAHKAN STIKER</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-mono text-[10px] font-bold text-ink-black/40 tracking-[0.2em]">TAMBAHKAN STIKER</h3>
+                  <label className="cursor-pointer bg-blood-red/10 text-blood-red px-3 py-1.5 text-[9px] font-mono font-bold tracking-widest border border-blood-red/20 hover:bg-blood-red hover:text-white transition-colors rounded-sm">
+                    + UNGGAH KUSTOM
+                    <input type="file" accept="image/*" className="hidden" onChange={handleUploadSticker} />
+                  </label>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   {STICKER_TEMPLATES.map((stk) => (
                     <button

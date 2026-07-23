@@ -3,6 +3,8 @@ import { Download, RotateCcw, ArrowLeft, Share2 } from 'lucide-react';
 import type { LayoutType, FilterType, StickerData } from '../types/index';
 import { renderToCanvas } from '../canvas/renderCanvas';
 import { saveSession, createThumbnail } from '../utils/sessions';
+import { generateBoomerangGIF } from '../utils/gifExport';
+import { Film } from 'lucide-react';
 
 interface ExportStepProps {
   layout: LayoutType;
@@ -24,6 +26,7 @@ export function ExportStep({
   const [isRendering, setIsRendering] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [shareSupported, setShareSupported] = useState(false);
+  const [isGifRendering, setIsGifRendering] = useState(false);
 
   // Check Web Share API support (#5)
   useEffect(() => {
@@ -77,6 +80,29 @@ export function ExportStep({
     link.click();
     document.body.removeChild(link);
   }, []);
+
+  const handleDownloadGIF = useCallback(async () => {
+    if (photos.length === 0) return;
+    try {
+      setIsGifRendering(true);
+      const gifUrl = await generateBoomerangGIF(photos, filter);
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      link.download = `bilens-booth-${timestamp}.gif`;
+      link.href = gifUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Revoke the object URL to free memory
+      setTimeout(() => URL.revokeObjectURL(gifUrl), 1000);
+    } catch (err) {
+      console.error('Failed to generate GIF:', err);
+      alert('Gagal membuat GIF. Silakan coba lagi.');
+    } finally {
+      setIsGifRendering(false);
+    }
+  }, [photos, filter]);
 
   // Web Share API (#5)
   const handleShare = useCallback(async () => {
@@ -136,10 +162,12 @@ export function ExportStep({
           ].join(' ')}
           aria-label="Final high-resolution photo print"
         />
-        {isRendering && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 m-3 sm:m-5">
+        {(isRendering || isGifRendering) && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 m-3 sm:m-5 bg-silver-halide/80 backdrop-blur-sm z-20">
             <div className="w-10 h-10 border-4 border-ink-black border-t-transparent animate-spin" />
-            <span className="font-mono text-xs text-ink-black/60 tracking-widest">■ MEMPROSES FOTO...</span>
+            <span className="font-mono text-xs text-ink-black tracking-widest font-bold">
+              {isGifRendering ? '■ MEMBUAT ANIMASI GIF...' : '■ MEMPROSES FOTO...'}
+            </span>
           </div>
         )}
       </div>
@@ -170,7 +198,7 @@ export function ExportStep({
           {shareSupported && (
             <button
               onClick={handleShare}
-              disabled={!isReady}
+              disabled={!isReady || isGifRendering}
               className="flex items-center justify-center gap-2 bg-paper-base text-ink-black font-mono text-sm px-6 py-4 uppercase border-4 border-ink-black btn-interact tracking-wider"
               aria-label="Share photo"
             >
@@ -179,10 +207,21 @@ export function ExportStep({
             </button>
           )}
 
-          {/* Download */}
+          {/* Download GIF */}
+          <button
+            onClick={handleDownloadGIF}
+            disabled={!isReady || isGifRendering}
+            className="flex items-center justify-center gap-2 bg-paper-base text-ink-black font-mono text-sm sm:text-base px-6 py-4 uppercase border-4 border-ink-black btn-interact font-bold tracking-wider"
+            aria-label="Download as animated GIF"
+          >
+            <Film size={20} strokeWidth={2.5} />
+            UNDUH GIF
+          </button>
+
+          {/* Download Photo */}
           <button
             onClick={handleDownload}
-            disabled={!isReady}
+            disabled={!isReady || isGifRendering}
             className="flex items-center justify-center gap-3 bg-kodak-yellow text-ink-black font-mono text-sm sm:text-base px-8 sm:px-12 py-4 sm:py-5 uppercase border-4 border-ink-black btn-interact font-bold tracking-wider"
             aria-label="Download photo as PNG"
           >

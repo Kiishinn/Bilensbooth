@@ -9,7 +9,7 @@ export enum AppStep {
 // Layout now dictates how many photos are printed
 export type LayoutType = 'strip-3' | 'strip-4' | 'grid-4' | 'polaroid-1';
 
-export type FilterType = 'raw' | 'bw' | 'sepia' | 'cross' | 'lomo' | 'expired';
+export type FilterType = 'raw' | 'bw' | 'sepia' | 'cross' | 'lomo' | 'expired' | 'lightleak' | 'paper';
 
 // Frame templates are now dynamic (string ID)
 // Refer to GRAPHIC_TEMPLATES in src/utils/frameRegistry.ts
@@ -82,6 +82,8 @@ export const FILTER_LABELS: Record<FilterType, string> = {
   cross: 'PROSES SILANG',
   lomo: 'LOMO',
   expired: 'FILM KEDALUWARSA',
+  lightleak: 'KEBOCORAN CAHAYA',
+  paper: 'TEKSTUR KERTAS',
 };
 
 export const STEP_LABELS: Record<AppStep, string> = {

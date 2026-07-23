@@ -8,13 +8,7 @@
 
 import type { FilterType, LayoutType } from '../types/index';
 import { GRAPHIC_TEMPLATES } from '../utils/frameRegistry';
-import {
-  applyBWFilter,
-  applySepiaFilter,
-  applyCrossFilter,
-  applyLomoFilter,
-  applyExpiredFilter,
-} from './filters';
+import { applyFilter } from './filters';
 
 export interface RenderOptions {
   layout: LayoutType;
@@ -206,35 +200,6 @@ function calculatePolaroidLayout(
   return { canvasHeight, slots, metaY: padding + photoH + gap * 2 };
 }
 
-/* ─── Apply Filter to Photo Region ─── */
-
-function applyFilterToRegion(
-  ctx: CanvasRenderingContext2D,
-  filter: FilterType,
-  x: number, y: number, w: number, h: number,
-  seed: number
-): void {
-  switch (filter) {
-    case 'bw':
-      applyBWFilter(ctx, x, y, w, h);
-      break;
-    case 'sepia':
-      applySepiaFilter(ctx, x, y, w, h, seed);
-      break;
-    case 'cross':
-      applyCrossFilter(ctx, x, y, w, h);
-      break;
-    case 'lomo':
-      applyLomoFilter(ctx, x, y, w, h);
-      break;
-    case 'expired':
-      applyExpiredFilter(ctx, x, y, w, h, seed);
-      break;
-    case 'raw':
-      break;
-  }
-}
-
 /* ─── Main Render Function ─── */
 
 export async function renderToCanvas(
@@ -294,8 +259,8 @@ export async function renderToCanvas(
     drawImageCover(ctx, img, slot.x, slot.y, slot.w, slot.h);
     ctx.restore();
 
-    // Apply filter
-    applyFilterToRegion(ctx, filter, slot.x, slot.y, slot.w, slot.h, grainSeed + i * 1000);
+    // Apply chosen filter just to this slot's region
+    applyFilter(ctx, filter, slot.x, slot.y, slot.w, slot.h, grainSeed + i * 1000);
 
     // Frame number overlay (#10)
     const numSize = Math.max(10, Math.round(slot.w * 0.03));

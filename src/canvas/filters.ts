@@ -7,6 +7,8 @@
  * Seeded PRNG ensures grain is consistent across re-renders (#8).
  */
 
+import { FilterType } from '../types';
+
 /* ─── Seeded PRNG (Mulberry32) ─── */
 
 function mulberry32(seed: number): () => number {
@@ -250,4 +252,110 @@ function applyLightLeak(
   ctx.fillStyle = gradient;
   ctx.fillRect(x, y, w, h);
   ctx.restore();
+}
+
+/* ─── NEW FILTERS: LIGHT LEAK & PAPER ─── */
+
+export function applyLightLeakFilter(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): void {
+  // Base contrast boost
+  const imageData = ctx.getImageData(x, y, width, height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    let r = data[i], g = data[i+1], b = data[i+2];
+    r = clamp((r - 128) * 1.1 + 128);
+    g = clamp((g - 128) * 1.1 + 128);
+    b = clamp((b - 128) * 1.1 + 128);
+    data[i] = r; data[i+1] = g; data[i+2] = b;
+  }
+  ctx.putImageData(imageData, x, y);
+  
+  // Apply an intense red/orange light leak on the left and right edges
+  const leftGradient = ctx.createLinearGradient(x, y, x + width * 0.4, y);
+  leftGradient.addColorStop(0, 'rgba(255, 60, 0, 0.4)');
+  leftGradient.addColorStop(1, 'rgba(255, 60, 0, 0)');
+  
+  const rightGradient = ctx.createLinearGradient(x + width, y + height, x + width * 0.5, y);
+  rightGradient.addColorStop(0, 'rgba(255, 200, 50, 0.3)');
+  rightGradient.addColorStop(1, 'rgba(255, 200, 50, 0)');
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.fillStyle = leftGradient;
+  ctx.fillRect(x, y, width, height);
+  ctx.fillStyle = rightGradient;
+  ctx.fillRect(x, y, width, height);
+  ctx.restore();
+}
+
+export function applyPaperFilter(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  seed: number
+): void {
+  const random = mulberry32(seed);
+  const imageData = ctx.getImageData(x, y, width, height);
+  const data = imageData.data;
+
+  // Add severe grain and lower contrast (matte paper look)
+  for (let i = 0; i < data.length; i += 4) {
+    let r = data[i], g = data[i+1], b = data[i+2];
+    
+    // Lower contrast
+    r = (r - 128) * 0.8 + 128 + 10;
+    g = (g - 128) * 0.8 + 128 + 10;
+    b = (b - 128) * 0.8 + 128 + 10;
+
+    // Heavy grain
+    const grain = (random() - 0.5) * 40;
+    data[i] = clamp(r + grain);
+    data[i+1] = clamp(g + grain);
+    data[i+2] = clamp(b + grain);
+  }
+  ctx.putImageData(imageData, x, y);
+}
+
+/* ─── CENTRAL FILTER ROUTER ─── */
+export function applyFilter(
+  ctx: CanvasRenderingContext2D,
+  filter: FilterType,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  seed: number = 12345
+) {
+  if (filter === 'raw') return;
+  
+  switch (filter) {
+    case 'bw':
+      applyBWFilter(ctx, x, y, w, h);
+      break;
+    case 'sepia':
+      applySepiaFilter(ctx, x, y, w, h, seed);
+      break;
+    case 'cross':
+      applyCrossFilter(ctx, x, y, w, h);
+      break;
+    case 'lomo':
+      applyLomoFilter(ctx, x, y, w, h);
+      break;
+    case 'expired':
+      applyExpiredFilter(ctx, x, y, w, h, seed);
+      break;
+    case 'lightleak':
+      applyLightLeakFilter(ctx, x, y, w, h);
+      break;
+    case 'paper':
+      applyPaperFilter(ctx, x, y, w, h, seed);
+      break;
+  }
 }
