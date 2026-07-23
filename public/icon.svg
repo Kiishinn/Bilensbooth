@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="0" fill="#1b1c1c"/>
+  <rect x="40" y="40" width="432" height="432" rx="0" fill="none" stroke="#FFDD00" stroke-width="12"/>
+  <text x="256" y="240" text-anchor="middle" font-family="monospace" font-size="160" font-weight="900" fill="#fbf9f8" dominant-baseline="central">BB</text>
+  <rect x="60" y="380" width="392" height="4" fill="#bb181e"/>
+  <text x="256" y="430" text-anchor="middle" font-family="monospace" font-size="28" font-weight="400" fill="#fbf9f8" opacity="0.5">BOOTH</text>
+</svg>

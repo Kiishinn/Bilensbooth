@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-paper-base text-ink-black font-body antialiased;
+    min-height: 100vh;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-blood-red;
+    outline-style: solid;
+  }
+
+  ::selection {
+    @apply bg-kodak-yellow text-ink-black;
+  }
+}
+
+@layer components {
+  /* ========================================
+     HARD SHADOW UTILITIES
+     ======================================== */
+  .hard-shadow {
+    box-shadow: 8px 8px 0px 0px #1b1c1c;
+  }
+
+  .hard-shadow-sm {
+    box-shadow: 4px 4px 0px 0px #1b1c1c;
+  }
+
+  /* ========================================
+     BUTTON INTERACTION - MECHANICAL PRESS
+     ======================================== */
+  .btn-interact {
+    @apply transition-all duration-150 ease-out cursor-pointer select-none;
+    box-shadow: 8px 8px 0px 0px #1b1c1c;
+  }
+
+  .btn-interact:hover:not(:disabled) {
+    transform: translate(-2px, -2px);
+    box-shadow: 10px 10px 0px 0px #1b1c1c;
+  }
+
+  .btn-interact:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px 0px #1b1c1c;
+  }
+
+  .btn-interact:disabled {
+    @apply opacity-40 cursor-not-allowed;
+    transform: none;
+    box-shadow: 8px 8px 0px 0px #1b1c1c;
+  }
+
+  /* ========================================
+     TAPE DECORATION - MASKING TAPE EFFECT
+     ======================================== */
+  .tape {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(1px);
+    width: 100px;
+    height: 28px;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* ========================================
+     SVG FRACTAL NOISE BACKGROUND OVERLAY
+     ======================================== */
+  .noise-bg::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+}
+
+@layer utilities {
+  /* ========================================
+     FLASH ANIMATION - SHUTTER FLASH
+     ======================================== */
+  .flash-animation {
+    animation: flash 0.3s ease-out forwards;
+  }
+
+  @keyframes flash {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* ========================================
+     COUNTDOWN PULSE ANIMATION
+     ======================================== */
+  .countdown-pulse {
+    animation: countdown-scale 0.9s ease-out;
+  }
+
+  @keyframes countdown-scale {
+    0% { transform: scale(1.8); opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0.9; transform: scale(1); }
+  }
+
+  /* ========================================
+     DEVELOPING ANIMATION - FADE IN REVEAL
+     ======================================== */
+  .develop-reveal {
+    animation: develop 1.5s ease-out forwards;
+  }
+
+  @keyframes develop {
+    0% { opacity: 0; filter: contrast(0) brightness(2); }
+    40% { opacity: 0.5; filter: contrast(0.5) brightness(1.3); }
+    100% { opacity: 1; filter: contrast(1) brightness(1); }
+  }
+
+  /* ========================================
+     STEP TRANSITION (#1) — FADE + SLIDE UP
+     ======================================== */
+  .step-enter {
+    animation: step-enter 0.4s ease-out;
+  }
+
+  @keyframes step-enter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ========================================
+     REDUCED MOTION SUPPORT (#14)
+     ======================================== */
+  @media (prefers-reduced-motion: reduce) {
+    .flash-animation,
+    .countdown-pulse,
+    .develop-reveal,
+    .step-enter {
+      animation: none !important;
+    }
+
+    .btn-interact,
+    .btn-interact:hover:not(:disabled),
+    .btn-interact:active:not(:disabled) {
+      transition: none !important;
+      transform: none !important;
+    }
+
+    * {
+      scroll-behavior: auto !important;
+    }
+  }
+}

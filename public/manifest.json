@@ -1,0 +1,19 @@
+{
+  "name": "Bilens Booth",
+  "short_name": "BilensBooth",
+  "description": "Make the moment for free — Analog Web Photobooth. 100% client-side, zero uploads, privacy first.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b1c1c",
+  "theme_color": "#1b1c1c",
+  "categories": ["photo", "entertainment"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
