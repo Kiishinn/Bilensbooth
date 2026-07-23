@@ -327,7 +327,7 @@ export async function renderToCanvas(
     layout === 'strip' ? 'FORMAT: 1×4 STRIP' : 'FORMAT: 2×2 GRID',
     canvasWidth - padding, lineY
   );
-  ctx.fillText('ABADIKAN MOMEN SECARA GRATIS', canvasWidth - padding, lineY + smallFont * 1.6);
+  ctx.fillText('MAKE THE MOMENT FOR FREE', canvasWidth - padding, lineY + smallFont * 1.6);
 
   ctx.restore();
 }
