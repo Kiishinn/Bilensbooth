@@ -193,8 +193,8 @@ export function ExportStep({
       {/* Privacy Notice */}
       <div className="mt-8 border-4 border-ink-black/15 p-4 font-mono text-[10px] text-ink-black/35 uppercase tracking-wider leading-relaxed">
         <span className="text-blood-red font-bold">■ PEMBERITAHUAN PRIVASI:</span>{' '}
-        FOTO INI DIPROSES SEPENUHNYA DI BROWSER ANDA. TIDAK ADA DATA YANG DIKIRIM KE
-        SERVER MANAPUN. FOTO ANDA TETAP BERADA DI PERANGKAT INI. TANPA PELACAKAN.
+        GAMBAR INI DIBUAT SEPENUHNYA DI BROWSER ANDA. TIDAK ADA DATA YANG DIKIRIM KE
+        SERVER MANAPUN. FOTO ANDA TETAP BERADA DI PERANGKAT ANDA. TANPA PELACAKAN.
         TANPA ANALITIK. TANPA UNGGAHAN.
       </div>
     </div>
