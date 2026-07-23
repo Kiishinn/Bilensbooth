@@ -6,20 +6,24 @@ interface UseCaptureReturn {
   countdown: number;
   currentShot: number;
   showFlash: boolean;
-  startCapture: (videoElement: HTMLVideoElement) => Promise<string[]>;
+  startCapture: (videoElement: HTMLVideoElement, totalShots: number, isMirrored: boolean) => Promise<string[]>;
 }
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function captureFrame(video: HTMLVideoElement): string {
+function captureFrame(video: HTMLVideoElement, isMirrored: boolean): string {
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d')!;
-  // Draw WITHOUT mirroring — CSS mirror is preview-only.
-  // drawImage reads the raw stream data (un-mirrored).
+  
+  if (isMirrored) {
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+  }
+  
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   return canvas.toDataURL('image/png');
 }
@@ -33,13 +37,13 @@ export function useCapture(): UseCaptureReturn {
   const cancelledRef = useRef(false);
 
   const startCapture = useCallback(
-    async (videoElement: HTMLVideoElement): Promise<string[]> => {
+    async (videoElement: HTMLVideoElement, totalShots: number, isMirrored: boolean): Promise<string[]> => {
       cancelledRef.current = false;
       setIsCapturing(true);
       setCapturedPhotos([]);
       const captured: string[] = [];
 
-      for (let shot = 0; shot < 6; shot++) {
+      for (let shot = 0; shot < totalShots; shot++) {
         if (cancelledRef.current) break;
 
         setCurrentShot(shot + 1);
@@ -58,7 +62,7 @@ export function useCapture(): UseCaptureReturn {
         setShowFlash(true);
 
         // Capture the frame from the live video
-        const dataUrl = captureFrame(videoElement);
+        const dataUrl = captureFrame(videoElement, isMirrored);
         captured.push(dataUrl);
         setCapturedPhotos([...captured]);
 
@@ -66,7 +70,7 @@ export function useCapture(): UseCaptureReturn {
         setShowFlash(false);
 
         // Brief pause before next shot (except after last)
-        if (shot < 5) {
+        if (shot < totalShots - 1) {
           await delay(500);
         }
       }

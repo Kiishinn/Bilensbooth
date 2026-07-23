@@ -6,8 +6,8 @@
  * custom event stamp (#4), filter application, metadata strip.
  */
 
-import type { FilterType, FrameColor, LayoutType } from '../types/index';
-import { FRAME_COLOR_HEX } from '../types/index';
+import type { FilterType, LayoutType } from '../types/index';
+import { GRAPHIC_TEMPLATES } from '../utils/frameRegistry';
 import {
   applyBWFilter,
   applySepiaFilter,
@@ -20,9 +20,10 @@ export interface RenderOptions {
   layout: LayoutType;
   photos: string[];
   filter: FilterType;
-  frameColor: FrameColor;
+  frameId: string;
   canvasWidth: number;
   customText?: string;
+  stickers?: import('../types/index').StickerData[];
 }
 
 /* ─── Image Loading ─── */
@@ -87,7 +88,6 @@ function drawSprocketHoles(
   ctx: CanvasRenderingContext2D,
   canvasWidth: number,
   canvasHeight: number,
-  frameColorHex: string,
   padding: number
 ): void {
   const holeW = Math.round(canvasWidth * 0.02);
@@ -95,9 +95,8 @@ function drawSprocketHoles(
   const spacing = Math.round(holeH * 2.2);
   const edgeMargin = Math.round(padding * 0.3);
 
-  const isDark = frameColorHex === '#1b1c1c' || frameColorHex === '#bb181e';
-  const holeColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
-  const holeBorder = isDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.12)';
+  const holeColor = 'rgba(255,255,255,0.07)';
+  const holeBorder = 'rgba(255,255,255,0.14)';
 
   ctx.save();
   ctx.lineWidth = 1;
@@ -190,6 +189,23 @@ function calculateGridLayout(
   return { canvasHeight, slots, metaY: padding + totalPhotosHeight + gap };
 }
 
+function calculatePolaroidLayout(
+  canvasWidth: number, _photoCount: number,
+  padding: number, gap: number, metaHeight: number
+): LayoutResult {
+  const photoW = canvasWidth - padding * 2;
+  const photoH = Math.round(photoW * 0.75);
+  // Extra bottom space for classic polaroid look
+  const canvasHeight = padding + photoH + metaHeight * 2.5 + padding; 
+  const slots: PhotoSlot[] = [{
+    x: padding,
+    y: padding,
+    w: photoW,
+    h: photoH,
+  }];
+  return { canvasHeight, slots, metaY: padding + photoH + gap * 2 };
+}
+
 /* ─── Apply Filter to Photo Region ─── */
 
 function applyFilterToRegion(
@@ -225,7 +241,7 @@ export async function renderToCanvas(
   canvas: HTMLCanvasElement,
   options: RenderOptions
 ): Promise<void> {
-  const { layout, photos, filter, frameColor, canvasWidth, customText } = options;
+  const { layout, photos, filter, frameId, canvasWidth, customText } = options;
   const ctx = canvas.getContext('2d');
   if (!ctx || photos.length === 0) return;
 
@@ -233,31 +249,41 @@ export async function renderToCanvas(
   const gap = Math.round(canvasWidth * 0.02);
   const metaHeight = Math.round(canvasWidth * 0.09);
 
-  const layoutResult =
-    layout === 'strip'
-      ? calculateStripLayout(canvasWidth, photos.length, padding, gap, metaHeight)
-      : calculateGridLayout(canvasWidth, photos.length, padding, gap, metaHeight);
+  let layoutResult: LayoutResult;
+  if (layout === 'strip-3') {
+    layoutResult = calculateStripLayout(canvasWidth, 3, padding, gap, metaHeight);
+  } else if (layout === 'strip-4') {
+    layoutResult = calculateStripLayout(canvasWidth, 4, padding, gap, metaHeight);
+  } else if (layout === 'polaroid-1') {
+    layoutResult = calculatePolaroidLayout(canvasWidth, 1, padding, gap, metaHeight);
+  } else {
+    layoutResult = calculateGridLayout(canvasWidth, 4, padding, gap, metaHeight);
+  }
 
   const { canvasHeight, slots, metaY } = layoutResult;
-  const frameHex = FRAME_COLOR_HEX[frameColor];
-  const isDarkFrame = frameColor === 'ink-black' || frameColor === 'blood-red';
+  const template = GRAPHIC_TEMPLATES.find(t => t.id === frameId) || GRAPHIC_TEMPLATES[0];
+  const isDarkFrame = template.theme === 'dark';
 
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
-  // Background
-  ctx.fillStyle = frameHex;
-  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-  // Film sprocket holes (strip only)
-  if (layout === 'strip') {
-    drawSprocketHoles(ctx, canvasWidth, canvasHeight, frameHex, padding);
-  }
-
   // Grain seed: consistent per render dimensions
   const grainSeed = canvasWidth * 7919 + photos.length * 31;
 
-  // Load and draw photos
+  // 1. Draw solid white background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  // 2. Draw Template Frame 
+  const templateImg = await loadImage(template.url);
+  ctx.drawImage(templateImg, 0, 0, canvasWidth, canvasHeight);
+
+  // 3. Draw extras (sprocket holes, borders)
+  if (layout.startsWith('strip')) {
+    drawSprocketHoles(ctx, canvasWidth, canvasHeight, padding);
+  }
+
+  // 4. Load and draw photos ON TOP
   const images = await Promise.all(photos.map(loadImage));
 
   for (let i = 0; i < images.length; i++) {
@@ -283,6 +309,7 @@ export async function renderToCanvas(
   }
 
   // Photo borders
+
   const borderColor = isDarkFrame ? '#fbf9f8' : '#1b1c1c';
   ctx.strokeStyle = borderColor;
   ctx.lineWidth = 2;
@@ -323,11 +350,46 @@ export async function renderToCanvas(
   ctx.font = `400 ${smallFont}px "JetBrains Mono", monospace`;
   ctx.fillStyle = secondaryColor;
   ctx.textAlign = 'right';
-  ctx.fillText(
-    layout === 'strip' ? 'FORMAT: 1×4 STRIP' : 'FORMAT: 2×2 GRID',
-    canvasWidth - padding, lineY
-  );
+  let layoutName = 'FORMAT: 2×2 GRID';
+  if (layout === 'strip-3') layoutName = 'FORMAT: 1×3 STRIP';
+  else if (layout === 'strip-4') layoutName = 'FORMAT: 1×4 STRIP';
+  else if (layout === 'polaroid-1') layoutName = 'FORMAT: 1×1 POLAROID';
+
+  ctx.fillText(layoutName, canvasWidth - padding, lineY);
   ctx.fillText('MAKE THE MOMENT FOR FREE', canvasWidth - padding, lineY + smallFont * 1.6);
 
+  // Outer border
+  ctx.strokeStyle = '#1b1c1c';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(0, 0, canvasWidth, canvasHeight);
+
   ctx.restore();
+
+  // ─── Draw Stickers ───
+  if (options.stickers && options.stickers.length > 0) {
+    for (const sticker of options.stickers) {
+      try {
+        const stickerImg = await loadImage(sticker.url);
+        const drawX = sticker.x * canvasWidth;
+        const drawY = sticker.y * canvasHeight;
+        
+        const baseSize = canvasWidth * 0.25;
+        const finalSize = baseSize * sticker.scale;
+        
+        ctx.save();
+        ctx.translate(drawX, drawY);
+        ctx.rotate((sticker.rotation * Math.PI) / 180);
+        ctx.drawImage(
+          stickerImg,
+          -finalSize / 2,
+          -finalSize / 2,
+          finalSize,
+          finalSize
+        );
+        ctx.restore();
+      } catch (err) {
+        console.warn('Failed to draw sticker:', sticker.url, err);
+      }
+    }
+  }
 }

@@ -3,7 +3,7 @@ import {
   AppStep,
   INITIAL_STATE,
 } from './types/index';
-import type { AppState, AppAction, LayoutType, FilterType, FrameColor, TimerDelay } from './types/index';
+import type { AppState, AppAction, LayoutType, FilterType, TimerDelay } from './types/index';
 import { StepIndicator } from './components/StepIndicator';
 import { StepTransition } from './components/StepTransition';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -32,12 +32,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, selectedIndices: action.payload };
     case 'SET_FILTER':
       return { ...state, filter: action.payload };
-    case 'SET_FRAME_COLOR':
-      return { ...state, frameColor: action.payload };
+    case 'SET_FRAME_ID':
+      return { ...state, frameId: action.payload };
     case 'SET_CUSTOM_TEXT':
       return { ...state, customText: action.payload };
     case 'SET_TIMER_DELAY':
       return { ...state, timerDelay: action.payload };
+    case 'SET_TOTAL_SHOTS':
+      return { ...state, totalShots: action.payload };
+    case 'SET_MIRRORED':
+      return { ...state, isMirrored: action.payload };
+    case 'SET_DEVICE_ID':
+      return { ...state, deviceId: action.payload };
+    case 'SET_STICKERS':
+      return { ...state, stickers: action.payload };
     case 'RETAKE':
       return { ...state, photos: [], selectedIndices: [], step: AppStep.CAPTURE };
     case 'RESET':
@@ -66,10 +74,14 @@ export default function App() {
   }, []);
 
   const handleSelectionConfirm = useCallback(() => {
-    if (state.selectedIndices.length === 4) {
+    let required = 4;
+    if (state.layout === 'strip-3') required = 3;
+    else if (state.layout === 'polaroid-1') required = 1;
+
+    if (state.selectedIndices.length === required) {
       dispatch({ type: 'SET_STEP', payload: AppStep.DARKROOM });
     }
-  }, [state.selectedIndices.length]);
+  }, [state.selectedIndices.length, state.layout]);
 
   const handleDarkroomConfirm = useCallback(() => {
     dispatch({ type: 'SET_STEP', payload: AppStep.EXPORT });
@@ -95,8 +107,8 @@ export default function App() {
     dispatch({ type: 'SET_FILTER', payload: f });
   }, []);
 
-  const handleFrameColorChange = useCallback((c: FrameColor) => {
-    dispatch({ type: 'SET_FRAME_COLOR', payload: c });
+  const handleFrameIdChange = useCallback((id: string) => {
+    dispatch({ type: 'SET_FRAME_ID', payload: id });
   }, []);
 
   const handleCustomTextChange = useCallback((t: string) => {
@@ -105,6 +117,22 @@ export default function App() {
 
   const handleTimerDelayChange = useCallback((d: TimerDelay) => {
     dispatch({ type: 'SET_TIMER_DELAY', payload: d });
+  }, []);
+
+  const handleTotalShotsChange = useCallback((n: number) => {
+    dispatch({ type: 'SET_TOTAL_SHOTS', payload: n });
+  }, []);
+
+  const handleMirroredChange = useCallback((m: boolean) => {
+    dispatch({ type: 'SET_MIRRORED', payload: m });
+  }, []);
+
+  const handleDeviceIdChange = useCallback((id: string) => {
+    dispatch({ type: 'SET_DEVICE_ID', payload: id });
+  }, []);
+
+  const handleStickersChange = useCallback((s: typeof state.stickers) => {
+    dispatch({ type: 'SET_STICKERS', payload: s });
   }, []);
 
   const handleSelectionChange = useCallback((indices: number[]) => {
@@ -117,8 +145,6 @@ export default function App() {
       case AppStep.INITIALIZE:
         return (
           <InitializeStep
-            layout={state.layout}
-            onLayoutSelect={handleLayoutSelect}
             onContinue={handleStartCapture}
           />
         );
@@ -126,7 +152,13 @@ export default function App() {
         return (
           <CaptureStep
             timerDelay={state.timerDelay}
+            totalShots={state.totalShots}
+            isMirrored={state.isMirrored}
+            deviceId={state.deviceId}
             onTimerDelayChange={handleTimerDelayChange}
+            onTotalShotsChange={handleTotalShotsChange}
+            onMirroredChange={handleMirroredChange}
+            onDeviceIdChange={handleDeviceIdChange}
             onCaptureComplete={handleCaptureComplete}
           />
         );
@@ -135,6 +167,8 @@ export default function App() {
           <ContactSheetStep
             photos={state.photos}
             selectedIndices={state.selectedIndices}
+            layout={state.layout!}
+            onLayoutSelect={handleLayoutSelect}
             onSelectionChange={handleSelectionChange}
             onConfirm={handleSelectionConfirm}
             onRetake={handleRetake}
@@ -146,11 +180,13 @@ export default function App() {
             layout={state.layout!}
             photos={selectedPhotos}
             filter={state.filter}
-            frameColor={state.frameColor}
+            frameId={state.frameId}
             customText={state.customText}
+            stickers={state.stickers}
             onFilterChange={handleFilterChange}
-            onFrameColorChange={handleFrameColorChange}
+            onFrameIdChange={handleFrameIdChange}
             onCustomTextChange={handleCustomTextChange}
+            onStickersChange={handleStickersChange}
             onConfirm={handleDarkroomConfirm}
             onBack={handleBackToContactSheet}
           />
@@ -161,8 +197,9 @@ export default function App() {
             layout={state.layout!}
             photos={selectedPhotos}
             filter={state.filter}
-            frameColor={state.frameColor}
+            frameId={state.frameId}
             customText={state.customText}
+            stickers={state.stickers}
             onStartOver={handleStartOver}
             onBack={handleBackToDarkroom}
           />

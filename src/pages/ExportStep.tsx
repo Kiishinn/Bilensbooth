@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import { Download, RotateCcw, ArrowLeft, Share2 } from 'lucide-react';
-import type { LayoutType, FilterType, FrameColor } from '../types/index';
+import type { LayoutType, FilterType, StickerData } from '../types/index';
 import { renderToCanvas } from '../canvas/renderCanvas';
 import { saveSession, createThumbnail } from '../utils/sessions';
 
@@ -8,14 +8,15 @@ interface ExportStepProps {
   layout: LayoutType;
   photos: string[];
   filter: FilterType;
-  frameColor: FrameColor;
+  frameId: string;
   customText: string;
+  stickers: StickerData[];
   onStartOver: () => void;
   onBack: () => void;
 }
 
 export function ExportStep({
-  layout, photos, filter, frameColor, customText,
+  layout, photos, filter, frameId, customText, stickers,
   onStartOver, onBack,
 }: ExportStepProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,13 +36,13 @@ export function ExportStep({
     setIsReady(false);
     try {
       await renderToCanvas(canvasRef.current, {
-        layout, photos, filter, frameColor, canvasWidth: 1200, customText,
+        layout, photos, filter, frameId, canvasWidth: 1200, customText, stickers,
       });
       setIsReady(true);
     } finally {
       setIsRendering(false);
     }
-  }, [layout, photos, filter, frameColor, customText]);
+  }, [layout, photos, filter, frameId, customText, stickers]);
 
   useEffect(() => {
     renderHighRes();
@@ -58,11 +59,12 @@ export function ExportStep({
         thumbnailDataUrl: thumbnail,
         layout,
         filter,
-        frameColor,
+        frameId,
         customText: customText || '',
+        stickers,
       });
     }
-  }, [isReady, layout, filter, frameColor, customText]);
+  }, [isReady, layout, photos, filter, frameId, customText, stickers]);
 
   const handleDownload = useCallback(() => {
     if (!canvasRef.current) return;

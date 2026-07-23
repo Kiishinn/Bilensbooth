@@ -6,9 +6,9 @@ interface UseCameraReturn {
   error: string | null;
   isLoading: boolean;
   facingMode: 'user' | 'environment';
-  startCamera: () => Promise<void>;
+  startCamera: (deviceId?: string) => Promise<void>;
   stopCamera: () => void;
-  flipCamera: () => Promise<void>;
+  devices: MediaDeviceInfo[];
 }
 
 export function useCamera(): UseCameraReturn {
@@ -19,6 +19,7 @@ export function useCamera(): UseCameraReturn {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -31,8 +32,18 @@ export function useCamera(): UseCameraReturn {
     }
   }, []);
 
-  const startCameraWithMode = useCallback(
-    async (mode: 'user' | 'environment') => {
+  const fetchDevices = useCallback(async () => {
+    try {
+      const allDevices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
+      setDevices(videoDevices);
+    } catch (e) {
+      console.error('Failed to enumerate devices', e);
+    }
+  }, []);
+
+  const startCameraWithSettings = useCallback(
+    async (mode: 'user' | 'environment', deviceId?: string) => {
       // Stop existing stream (handles StrictMode double-invoke + flip)
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -43,12 +54,19 @@ export function useCamera(): UseCameraReturn {
       setError(null);
 
       try {
+        const videoConstraints: MediaTrackConstraints = {
+          width: { ideal: 1280 },
+          height: { ideal: 960 },
+        };
+        
+        if (deviceId) {
+          videoConstraints.deviceId = { exact: deviceId };
+        } else {
+          videoConstraints.facingMode = mode;
+        }
+
         const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: mode,
-            width: { ideal: 1280 },
-            height: { ideal: 960 },
-          },
+          video: videoConstraints,
           audio: false,
         });
 
@@ -66,6 +84,9 @@ export function useCamera(): UseCameraReturn {
             if (e.name !== 'AbortError') throw e;
           }
         }
+        
+        // Fetch devices after successful permission
+        fetchDevices();
       } catch (err: unknown) {
         const mediaError = err as DOMException;
         if (mediaError.name === 'NotAllowedError') {
@@ -75,10 +96,15 @@ export function useCamera(): UseCameraReturn {
         } else if (mediaError.name === 'NotReadableError') {
           setError('KAMERA SEDANG DIGUNAKAN OLEH APLIKASI LAIN. TUTUP APLIKASI TERSEBUT DAN COBA LAGI.');
         } else if (mediaError.name === 'OverconstrainedError') {
-          // Rear camera not available — try opposite mode
+          // Fallbacks
+          if (deviceId) {
+            setError(null);
+            await startCameraWithSettings('user');
+            return;
+          }
           if (mode === 'environment') {
             setError(null);
-            await startCameraWithMode('user');
+            await startCameraWithSettings('user');
             return;
           }
           setError('KAMERA TIDAK DIDUKUNG.');
@@ -89,17 +115,12 @@ export function useCamera(): UseCameraReturn {
         setIsLoading(false);
       }
     },
-    []
+    [fetchDevices]
   );
 
-  const startCamera = useCallback(() => {
-    return startCameraWithMode('user');
-  }, [startCameraWithMode]);
-
-  const flipCamera = useCallback(async () => {
-    const newMode = facingModeRef.current === 'user' ? 'environment' : 'user';
-    await startCameraWithMode(newMode);
-  }, [startCameraWithMode]);
+  const startCamera = useCallback((deviceId?: string) => {
+    return startCameraWithSettings('user', deviceId);
+  }, [startCameraWithSettings]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -118,6 +139,6 @@ export function useCamera(): UseCameraReturn {
     facingMode,
     startCamera,
     stopCamera,
-    flipCamera,
+    devices,
   };
 }

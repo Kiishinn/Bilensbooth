@@ -1,20 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Archive, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
-import type { LayoutType, SessionRecord } from '../types/index';
-import { TapeDecoration } from '../components/TapeDecoration';
+import { ArrowRight, Archive, ChevronDown, ChevronUp, Trash2, Camera, Aperture } from 'lucide-react';
+import type { SessionRecord } from '../types/index';
 import { getSessions, clearSessions } from '../utils/sessions';
 
 interface InitializeStepProps {
-  layout: LayoutType | null;
-  onLayoutSelect: (layout: LayoutType) => void;
   onContinue: () => void;
 }
 
-export function InitializeStep({
-  layout,
-  onLayoutSelect,
-  onContinue,
-}: InitializeStepProps) {
+export function InitializeStep({ onContinue }: InitializeStepProps) {
   const [showArchive, setShowArchive] = useState(false);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
 
@@ -23,168 +16,116 @@ export function InitializeStep({
   }, []);
 
   const handleClearArchive = () => {
-    clearSessions();
-    setSessions([]);
-    setShowArchive(false);
+    if(confirm('Apakah Anda yakin ingin menghapus semua riwayat sesi?')) {
+      clearSessions();
+      setSessions([]);
+      setShowArchive(false);
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Title */}
-      <div className="mb-10 sm:mb-14 relative">
-        <TapeDecoration className="-top-3 left-8" rotation={-2} width={90} />
-        <h2 className="font-display text-4xl sm:text-6xl font-black uppercase tracking-tighter leading-none">
-          Persiapan
-        </h2>
-        <p className="font-mono text-xs sm:text-sm mt-3 text-ink-black/50 uppercase tracking-wider">
-          PILIH FORMAT CETAK UNTUK MEMULAI PENGAMBILAN GAMBAR
+    <div className="min-h-[80vh] flex flex-col justify-center max-w-5xl mx-auto px-4 relative">
+      
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 right-10 opacity-10 rotate-12 pointer-events-none">
+        <Aperture size={200} strokeWidth={1} />
+      </div>
+      <div className="absolute bottom-20 left-10 opacity-10 -rotate-12 pointer-events-none">
+        <Camera size={150} strokeWidth={1} />
+      </div>
+
+      <div className="flex-1 flex flex-col justify-center items-center text-center relative z-10 py-12">
+        {/* Interactive Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute top-[20%] left-[10%] animate-[bounce_4s_infinite] opacity-20">
+            <div className="w-16 h-20 border-4 border-ink-black -rotate-12 bg-silver-halide"></div>
+          </div>
+          <div className="absolute top-[60%] right-[15%] animate-[bounce_5s_infinite_100ms] opacity-20">
+            <div className="w-20 h-24 border-4 border-ink-black rotate-6 bg-silver-halide"></div>
+          </div>
+          <div className="absolute top-[30%] right-[20%] animate-[bounce_6s_infinite_300ms] opacity-20">
+            <div className="w-12 h-12 border-4 border-ink-black rotate-45 bg-silver-halide"></div>
+          </div>
+        </div>
+
+        {/* Huge Interactive Title */}
+        <h1 className="relative font-display text-7xl sm:text-8xl md:text-9xl font-black uppercase tracking-tighter leading-[0.85] text-ink-black drop-shadow-sm mb-6 z-10 group cursor-default">
+          Bilens
+          <br />
+          <span className="text-blood-red group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blood-red group-hover:to-kodak-yellow transition-all duration-500">
+            Booth.
+          </span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="max-w-xl text-ink-black/60 font-body text-base sm:text-xl leading-relaxed mb-12">
+          Platform photobooth digital bergaya analog. Ambil momen tak terlupakan dengan nuansa retro langsung dari perangkat Anda.
         </p>
-      </div>
 
-      {/* Layout Options */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 mb-10">
-        {/* STANDARD STRIP */}
-        <button
-          onClick={() => onLayoutSelect('strip')}
-          className={[
-            'relative p-6 sm:p-8 border-4 text-left transition-all duration-200 group',
-            layout === 'strip'
-              ? 'border-blood-red bg-blood-red/5 hard-shadow'
-              : 'border-ink-black bg-paper-base hard-shadow-sm hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-hard',
-          ].join(' ')}
-          aria-label="Select Standard Strip 1 by 4 layout"
-          aria-pressed={layout === 'strip'}
-        >
-          {layout === 'strip' && (
-            <div className="absolute top-0 right-0 bg-blood-red text-paper-base font-mono text-[10px] px-3 py-1 tracking-wider">
-              ● DIPILIH
-            </div>
-          )}
-          <div className="mb-5">
-            <h3 className="font-display text-xl sm:text-2xl font-bold uppercase tracking-tight">
-              Strip Standar
-            </h3>
-            <p className="font-mono text-[10px] text-ink-black/40 mt-1 tracking-widest">
-              FORMAT: 1×4 VERTIKAL
-            </p>
-          </div>
-          <div className="flex justify-center py-4">
-            <div className="w-14 flex flex-col gap-[3px]">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={[
-                  'w-full h-9 border-2 transition-colors duration-200',
-                  layout === 'strip'
-                    ? 'border-blood-red bg-blood-red/10'
-                    : 'border-ink-black/40 bg-silver-halide group-hover:border-ink-black',
-                ].join(' ')} />
-              ))}
-            </div>
-          </div>
-          <p className="font-body text-sm text-ink-black/50 mt-3">
-            Strip foto vertikal klasik. Empat bingkai disusun berurutan.
-          </p>
-        </button>
-
-        {/* EVIDENCE GRID */}
-        <button
-          onClick={() => onLayoutSelect('grid')}
-          className={[
-            'relative p-6 sm:p-8 border-4 text-left transition-all duration-200 group',
-            layout === 'grid'
-              ? 'border-blood-red bg-blood-red/5 hard-shadow'
-              : 'border-ink-black bg-paper-base hard-shadow-sm hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-hard',
-          ].join(' ')}
-          aria-label="Select Evidence Grid 2 by 2 layout"
-          aria-pressed={layout === 'grid'}
-        >
-          {layout === 'grid' && (
-            <div className="absolute top-0 right-0 bg-blood-red text-paper-base font-mono text-[10px] px-3 py-1 tracking-wider">
-              ● DIPILIH
-            </div>
-          )}
-          <div className="mb-5">
-            <h3 className="font-display text-xl sm:text-2xl font-bold uppercase tracking-tight">
-              Grid Persegi
-            </h3>
-            <p className="font-mono text-[10px] text-ink-black/40 mt-1 tracking-widest">
-              FORMAT: 2×2 PERSEGI
-            </p>
-          </div>
-          <div className="flex justify-center py-4">
-            <div className="grid grid-cols-2 gap-[3px] w-[72px]">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={[
-                  'w-full h-9 border-2 transition-colors duration-200',
-                  layout === 'grid'
-                    ? 'border-blood-red bg-blood-red/10'
-                    : 'border-ink-black/40 bg-silver-halide group-hover:border-ink-black',
-                ].join(' ')} />
-              ))}
-            </div>
-          </div>
-          <p className="font-body text-sm text-ink-black/50 mt-3">
-            Kolase berbentuk persegi. Format lembar kontak dua-kali-dua.
-          </p>
-        </button>
-      </div>
-
-      {/* Continue Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={onContinue}
-          disabled={!layout}
-          className="flex items-center gap-3 bg-ink-black text-paper-base font-mono text-sm px-8 py-4 uppercase border-4 border-ink-black btn-interact tracking-wider"
-          aria-label="Continue to capture step"
-        >
-          MULAI SESI FOTO
-          <ArrowRight size={18} />
-        </button>
-      </div>
-
-      {/* ─── Session Archive (#15) ─── */}
-      {sessions.length > 0 && (
-        <div className="mt-12 border-t-4 border-ink-black/10 pt-6">
+        {/* Main CTA */}
+        <div className="relative z-10">
+          <div className="absolute inset-0 bg-blood-red/20 blur-2xl rounded-full animate-pulse"></div>
           <button
-            onClick={() => setShowArchive(!showArchive)}
-            className="font-mono text-xs text-ink-black/40 uppercase tracking-widest hover:text-ink-black transition-colors flex items-center gap-2"
-            aria-expanded={showArchive}
-            aria-label="Toggle session archive"
+            onClick={onContinue}
+            className="group relative flex items-center gap-4 bg-ink-black text-paper-base font-mono text-lg sm:text-xl px-12 py-6 uppercase border-4 border-ink-black tracking-widest hover:bg-blood-red hover:border-blood-red transition-all duration-300 hard-shadow hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-hard overflow-hidden"
+            aria-label="Continue to capture step"
           >
-            <Archive size={14} />
-            ARSIP ({sessions.length} {sessions.length === 1 ? 'SESI' : 'SESI'})
-            {showArchive ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+            <Camera size={26} className="group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 relative z-10" />
+            <span className="relative z-10 font-bold">Mulai Sesi Foto</span>
+            <ArrowRight size={26} className="group-hover:translate-x-3 transition-transform duration-300 relative z-10" />
           </button>
+        </div>
+      </div>
 
-          {showArchive && (
-            <div className="mt-4">
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                {sessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="border-2 border-ink-black/20 overflow-hidden bg-silver-halide"
+      {/* ─── Session Archive ─── */}
+      {sessions.length > 0 && (
+        <div className="w-full max-w-4xl mx-auto mt-auto pb-12">
+          <div className="flex flex-col items-center">
+            <button
+              onClick={() => setShowArchive(!showArchive)}
+              className="bg-paper-base border-2 border-ink-black/20 hover:border-ink-black px-6 py-2.5 rounded-full font-mono text-xs text-ink-black uppercase tracking-widest transition-all flex items-center gap-3 hard-shadow-sm"
+              aria-expanded={showArchive}
+            >
+              <Archive size={14} />
+              Arsip ({sessions.length} Sesi)
+              {showArchive ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            {showArchive && (
+              <div className="w-full mt-8 p-6 bg-silver-halide/30 border-4 border-ink-black/10 rounded-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-mono text-xs tracking-widest font-bold">RIWAYAT FOTO ANDA</h3>
+                  <button
+                    onClick={handleClearArchive}
+                    className="flex items-center gap-2 font-mono text-[10px] text-blood-red uppercase tracking-widest hover:bg-blood-red/10 px-3 py-1.5 rounded-md transition-colors"
                   >
-                    <img
-                      src={session.thumbnailDataUrl}
-                      className="w-full h-auto"
-                      alt={`Session from ${new Date(session.timestamp).toLocaleDateString()}`}
-                    />
-                    <div className="p-1.5 font-mono text-[8px] text-ink-black/40 tracking-wider leading-relaxed">
-                      <div>{new Date(session.timestamp).toLocaleDateString()}</div>
-                      <div>{session.customText || 'BILENS BOOTH'}</div>
+                    <Trash2 size={12} /> Hapus Arsip
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {sessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="group relative border-2 border-ink-black/20 overflow-hidden bg-silver-halide hover:border-ink-black transition-colors"
+                    >
+                      <img
+                        src={session.thumbnailDataUrl}
+                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                        alt={`Session from ${new Date(session.timestamp).toLocaleDateString()}`}
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-ink-black/90 to-transparent p-3 pt-8 translate-y-full group-hover:translate-y-0 transition-transform">
+                        <div className="font-mono text-[9px] text-paper-base tracking-wider">
+                          {new Date(session.timestamp).toLocaleDateString()}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-              <button
-                onClick={handleClearArchive}
-                className="mt-4 flex items-center gap-1.5 font-mono text-[10px] text-blood-red uppercase tracking-widest hover:underline"
-                aria-label="Clear all archived sessions"
-              >
-                <Trash2 size={10} />
-                HAPUS ARSIP
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

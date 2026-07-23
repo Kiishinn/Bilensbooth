@@ -6,13 +6,24 @@ export enum AppStep {
   EXPORT = 'EXPORT',
 }
 
-export type LayoutType = 'strip' | 'grid';
+// Layout now dictates how many photos are printed
+export type LayoutType = 'strip-3' | 'strip-4' | 'grid-4' | 'polaroid-1';
 
 export type FilterType = 'raw' | 'bw' | 'sepia' | 'cross' | 'lomo' | 'expired';
 
-export type FrameColor = 'paper-base' | 'ink-black' | 'blood-red' | 'kodak-yellow';
+// Frame templates are now dynamic (string ID)
+// Refer to GRAPHIC_TEMPLATES in src/utils/frameRegistry.ts
+export type TimerDelay = number; // 3 to 10 seconds
 
-export type TimerDelay = 0 | 5 | 10;
+/* ─── Stickers ─── */
+export interface StickerData {
+  id: string; // unique instance ID (e.g. timestamp)
+  url: string; // source url of the sticker
+  x: number; // percentage (0 to 1) relative to canvas width
+  y: number; // percentage (0 to 1) relative to canvas height
+  scale: number; // scale multiplier, default 1
+  rotation: number; // rotation in degrees, default 0
+}
 
 /* ─── Reducer State & Actions ─── */
 
@@ -22,9 +33,13 @@ export interface AppState {
   photos: string[];
   selectedIndices: number[];
   filter: FilterType;
-  frameColor: FrameColor;
+  frameId: string;
   customText: string;
   timerDelay: TimerDelay;
+  totalShots: number;
+  isMirrored: boolean;
+  deviceId: string;
+  stickers: StickerData[];
 }
 
 export type AppAction =
@@ -33,38 +48,32 @@ export type AppAction =
   | { type: 'CAPTURE_COMPLETE'; payload: string[] }
   | { type: 'SET_SELECTED_INDICES'; payload: number[] }
   | { type: 'SET_FILTER'; payload: FilterType }
-  | { type: 'SET_FRAME_COLOR'; payload: FrameColor }
+  | { type: 'SET_FRAME_ID'; payload: string }
   | { type: 'SET_CUSTOM_TEXT'; payload: string }
   | { type: 'SET_TIMER_DELAY'; payload: TimerDelay }
+  | { type: 'SET_TOTAL_SHOTS'; payload: number }
+  | { type: 'SET_MIRRORED'; payload: boolean }
+  | { type: 'SET_DEVICE_ID'; payload: string }
+  | { type: 'SET_STICKERS'; payload: StickerData[] }
   | { type: 'RETAKE' }
   | { type: 'RESET' };
 
 export const INITIAL_STATE: AppState = {
   step: AppStep.INITIALIZE,
-  layout: null,
+  layout: 'strip-4',
   photos: [],
   selectedIndices: [],
   filter: 'raw',
-  frameColor: 'paper-base',
+  frameId: '01-paper-base',
   customText: '',
-  timerDelay: 0,
+  timerDelay: 3, // Default 3 detik
+  totalShots: 5, // Default 5 foto
+  isMirrored: true, // Default mirror nyala (kamera depan)
+  deviceId: '', // Default auto
+  stickers: [],
 };
 
 /* ─── Lookup Maps (Diterjemahkan ke Bahasa Indonesia) ─── */
-
-export const FRAME_COLOR_HEX: Record<FrameColor, string> = {
-  'paper-base': '#fbf9f8',
-  'ink-black': '#1b1c1c',
-  'blood-red': '#bb181e',
-  'kodak-yellow': '#FFDD00',
-};
-
-export const FRAME_COLOR_LABELS: Record<FrameColor, string> = {
-  'paper-base': 'KERTAS DASAR',
-  'ink-black': 'TINTA HITAM',
-  'blood-red': 'MERAH DARAH',
-  'kodak-yellow': 'KUNING KODAK',
-};
 
 export const FILTER_LABELS: Record<FilterType, string> = {
   raw: 'ASLI (RAW)',
@@ -91,6 +100,7 @@ export interface SessionRecord {
   thumbnailDataUrl: string;
   layout: LayoutType;
   filter: FilterType;
-  frameColor: FrameColor;
+  frameId: string; // Menggunakan graphicTemplateId, default: '01-classic'
   customText: string;
+  stickers: StickerData[];
 }

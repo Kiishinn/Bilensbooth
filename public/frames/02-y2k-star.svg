@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="none">
+  <rect width="100%" height="100%" fill="#120B29"/>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ff00ff" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+    <g id="star">
+      <path d="M10,0 L13,7 L20,10 L13,13 L10,20 L7,13 L0,10 L7,7 Z" fill="#00ffff"/>
+    </g>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#grid)" />
+  <use href="#star" x="5%" y="5%" transform="scale(2)" />
+  <use href="#star" x="80%" y="15%" transform="scale(1.5)" />
+  <use href="#star" x="10%" y="85%" transform="scale(3)" />
+  <use href="#star" x="85%" y="90%" transform="scale(1)" />
+  <rect x="3%" y="3%" width="94%" height="94%" fill="none" stroke="#00ffff" stroke-width="4"/>
+  <rect x="4%" y="4%" width="92%" height="92%" fill="none" stroke="#ff00ff" stroke-width="2"/>
+</svg>
