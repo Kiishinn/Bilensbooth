@@ -18,48 +18,56 @@ export function useShutterSound(): { playShutter: () => void } {
 
       const time = ctx.currentTime;
 
-      // 1. High-frequency click (mechanical noise)
-      const bufferSize = ctx.sampleRate * 0.04; // 40ms noise
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
+      // A mechanical shutter has two distinct sounds: Mirror Up (Ka) and Mirror Down (Chak)
+      const createClick = (startTime: number, isDown: boolean) => {
+        // 1. Mechanical snap (high frequency burst)
+        const bufferSize = ctx.sampleRate * 0.025; // 25ms
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * (isDown ? 0.7 : 1.0);
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        
+        const noiseFilter = ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = isDown ? 3000 : 4500; // Lower pitch for mirror down
+        noiseFilter.Q.value = 1.2;
 
-      const noiseFilter = ctx.createBiquadFilter();
-      noiseFilter.type = 'highpass';
-      noiseFilter.frequency.value = 2000;
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(2, startTime);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.025);
+        
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
 
-      const noiseGain = ctx.createGain();
-      noiseGain.gain.setValueAtTime(0.8, time);
-      noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.04);
-
-      noise.connect(noiseFilter);
-      noiseFilter.connect(noiseGain);
-      noiseGain.connect(ctx.destination);
-
-      // 2. Low-frequency thump (mirror slap)
-      const osc = ctx.createOscillator();
-      osc.type = 'square';
+        // 2. Thump (body resonance)
+        const osc = ctx.createOscillator();
+        osc.type = 'triangle';
+        
+        const oscGain = ctx.createGain();
+        osc.frequency.setValueAtTime(isDown ? 100 : 150, startTime);
+        osc.frequency.exponentialRampToValueAtTime(40, startTime + 0.04);
+        
+        oscGain.gain.setValueAtTime(1.5, startTime);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.04);
+        
+        osc.connect(oscGain);
+        oscGain.connect(ctx.destination);
+        
+        noise.start(startTime);
+        osc.start(startTime);
+        noise.stop(startTime + 0.03);
+        osc.stop(startTime + 0.05);
+      };
       
-      const oscGain = ctx.createGain();
-      osc.frequency.setValueAtTime(150, time);
-      osc.frequency.exponentialRampToValueAtTime(40, time + 0.08);
+      // Play mirror up (Ka)
+      createClick(time, false);
       
-      oscGain.gain.setValueAtTime(1, time);
-      oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.08);
-
-      osc.connect(oscGain);
-      oscGain.connect(ctx.destination);
-
-      // Start sounds
-      noise.start(time);
-      osc.start(time);
-      
-      noise.stop(time + 0.04);
-      osc.stop(time + 0.08);
+      // Play mirror down (Chak) slightly after (simulating ~1/10s shutter speed)
+      createClick(time + 0.1, true);
 
     } catch (e) {
       // Audio API not available or blocked — graceful degradation

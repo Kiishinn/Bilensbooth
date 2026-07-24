@@ -261,16 +261,6 @@ export async function renderToCanvas(
 
     // Apply chosen filter just to this slot's region
     applyFilter(ctx, filter, slot.x, slot.y, slot.w, slot.h, grainSeed + i * 1000);
-
-    // Frame number overlay (#10)
-    const numSize = Math.max(10, Math.round(slot.w * 0.03));
-    ctx.save();
-    ctx.font = `700 ${numSize}px "JetBrains Mono", monospace`;
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(String(i + 1).padStart(2, '0'), slot.x + slot.w - 8, slot.y + slot.h - 8);
-    ctx.restore();
   }
 
   // Photo borders

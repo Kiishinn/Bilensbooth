@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from 'react';
-import { Camera, RefreshCw, Zap, Circle, ChevronDown } from 'lucide-react';
+import { Camera, RefreshCw, Zap, ChevronDown } from 'lucide-react';
 import { useCamera } from '../hooks/useCamera';
 import { useCapture } from '../hooks/useCapture';
 import { useShutterSound } from '../hooks/useShutterSound';
@@ -16,10 +16,6 @@ interface CaptureStepProps {
   onMirroredChange: (m: boolean) => void;
   onDeviceIdChange: (id: string) => void;
   onCaptureComplete: (photos: string[]) => void;
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
 }
 
 export function CaptureStep({
@@ -45,11 +41,7 @@ export function CaptureStep({
   const { playShutter } = useShutterSound();
 
   const [hasStarted, setHasStarted] = useState(false);
-  const [isPreDelay, setIsPreDelay] = useState(false);
-  const [preDelayCount, setPreDelayCount] = useState(0);
-  
-  const [flashEnabled, setFlashEnabled] = useState(true);
-  const [ringLightEnabled, setRingLightEnabled] = useState(false);
+  const [flashEnabled, setFlashEnabled] = useState(false); // Default mati sesuai permintaan
 
   // Stop camera on unmount
   useEffect(() => {
@@ -61,35 +53,28 @@ export function CaptureStep({
     startCamera(deviceId);
   }, [deviceId, startCamera]);
 
-  useEffect(() => {
-    if (showFlash && flashEnabled) playShutter();
-  }, [showFlash, flashEnabled, playShutter]);
-
   const handleEngageShutter = useCallback(async () => {
-    if (!videoRef.current || isCapturing || isPreDelay) return;
+    if (!videoRef.current || isCapturing) return;
     setHasStarted(true);
 
-    if (timerDelay > 0) {
-      setIsPreDelay(true);
-      for (let i = timerDelay; i > 0; i--) {
-        setPreDelayCount(i);
-        await delay(1000);
-      }
-      setPreDelayCount(0);
-      setIsPreDelay(false);
-    }
-
-    const captured = await startCapture(videoRef.current, totalShots, isMirrored);
+    const captured = await startCapture(
+      videoRef.current, 
+      totalShots, 
+      isMirrored, 
+      timerDelay, 
+      playShutter
+    );
+    
     if (captured.length === totalShots) {
       stopCamera();
       onCaptureComplete(captured);
     }
-  }, [videoRef, isCapturing, isPreDelay, timerDelay, totalShots, isMirrored, startCapture, stopCamera, onCaptureComplete]);
+  }, [videoRef, isCapturing, timerDelay, totalShots, isMirrored, startCapture, stopCamera, onCaptureComplete, playShutter]);
 
-  const showControls = !isCapturing && !isPreDelay && !!stream && !hasStarted;
+  const showControls = !isCapturing && !!stream && !hasStarted;
 
   return (
-    <div className={`max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl bg-neutral-900 text-white ${ringLightEnabled ? 'ring-8 ring-white' : ''} transition-all duration-300`}>
+    <div className={`max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl bg-neutral-900 text-white transition-all duration-300`}>
       <FlashOverlay show={showFlash && flashEnabled} />
 
       {/* Main Camera Viewfinder */}
@@ -127,14 +112,6 @@ export function CaptureStep({
 
         <CountdownOverlay count={countdown} />
 
-        {isPreDelay && preDelayCount > 0 && (
-          <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/50">
-            <span className="font-mono text-[10rem] font-bold text-white countdown-pulse leading-none" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-              {preDelayCount}
-            </span>
-          </div>
-        )}
-
         {/* Status Indicators */}
         {isCapturing && (
           <div className="absolute top-6 right-6 bg-red-600 px-4 py-1.5 rounded-full font-mono text-xs font-bold tracking-widest animate-pulse">
@@ -156,7 +133,7 @@ export function CaptureStep({
       )}
 
       {/* Control Panel (Hidden during capture) */}
-      <div className={`bg-neutral-800 p-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-opacity duration-300 ${isCapturing || isPreDelay ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`bg-neutral-800 p-6 grid gap-6 sm:grid-cols-2 transition-opacity duration-300 ${isCapturing ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         
         {/* Device Selection */}
         <div className="flex flex-col gap-2">
@@ -184,7 +161,7 @@ export function CaptureStep({
               onClick={() => onMirroredChange(!isMirrored)}
               className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border text-sm font-medium transition-colors ${isMirrored ? 'bg-white/10 border-white/20 text-white' : 'bg-neutral-900 border-white/5 text-white/50'}`}
             >
-              <RefreshCw size={16} /> Aktif
+              <RefreshCw size={16} /> {isMirrored ? 'Nyala' : 'Mati'}
             </button>
           </div>
           <div className="flex-1 flex flex-col gap-2">
@@ -193,20 +170,9 @@ export function CaptureStep({
               onClick={() => setFlashEnabled(!flashEnabled)}
               className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border text-sm font-medium transition-colors ${flashEnabled ? 'bg-white/10 border-white/20 text-white' : 'bg-neutral-900 border-white/5 text-white/50'}`}
             >
-              <Zap size={16} /> Aktif
+              <Zap size={16} /> {flashEnabled ? 'Nyala' : 'Mati'}
             </button>
           </div>
-        </div>
-
-        {/* Ring Light */}
-        <div className="flex flex-col gap-2">
-          <label className="font-mono text-[10px] text-white/50 tracking-widest uppercase">Ring Light</label>
-          <button 
-            onClick={() => setRingLightEnabled(!ringLightEnabled)}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border text-sm font-medium transition-colors ${ringLightEnabled ? 'bg-white text-black' : 'bg-neutral-900 border-white/5 text-white/50'}`}
-          >
-            <Circle size={16} /> {ringLightEnabled ? 'Menyala' : 'Mati'}
-          </button>
         </div>
 
         {/* Timer Selection */}

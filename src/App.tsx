@@ -12,6 +12,7 @@ import { CaptureStep } from './pages/CaptureStep';
 import { ContactSheetStep } from './pages/ContactSheetStep';
 import { DarkroomStep } from './pages/DarkroomStep';
 import { ExportStep } from './pages/ExportStep';
+import { GlobalBackground } from './components/reactbits/GlobalBackground';
 
 /* ─── Reducer (#7) ─── */
 
@@ -208,7 +209,8 @@ export default function App() {
   };
 
   return (
-    <div className="noise-bg min-h-screen flex flex-col relative">
+    <div className="min-h-screen flex flex-col relative">
+      <GlobalBackground />
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
         <header className="border-b-4 border-ink-black bg-ink-black text-paper-base">

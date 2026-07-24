@@ -5,6 +5,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-y: scroll; /* Force vertical scrollbar to prevent layout shift */
   }
 
   body {

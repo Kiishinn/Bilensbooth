@@ -3,6 +3,7 @@ import { Download, RotateCcw, ArrowLeft, Share2 } from 'lucide-react';
 import type { LayoutType, FilterType, StickerData } from '../types/index';
 import { renderToCanvas } from '../canvas/renderCanvas';
 import { saveSession, createThumbnail } from '../utils/sessions';
+import { saveHighResPhoto } from '../utils/db';
 import { generateBoomerangGIF } from '../utils/gifExport';
 import { Film } from 'lucide-react';
 
@@ -55,9 +56,12 @@ export function ExportStep({
   useEffect(() => {
     if (isReady && canvasRef.current && !savedRef.current) {
       savedRef.current = true;
-      const thumbnail = createThumbnail(canvasRef.current);
+      const canvas = canvasRef.current;
+      const thumbnail = createThumbnail(canvas);
+      const sessionId = crypto.randomUUID();
+      
       saveSession({
-        id: crypto.randomUUID(),
+        id: sessionId,
         timestamp: new Date().toISOString(),
         thumbnailDataUrl: thumbnail,
         layout,
@@ -66,6 +70,10 @@ export function ExportStep({
         customText: customText || '',
         stickers,
       });
+
+      // Save high-res async to IndexedDB
+      const highResDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      saveHighResPhoto(sessionId, highResDataUrl).catch(console.error);
     }
   }, [isReady, layout, photos, filter, frameId, customText, stickers]);
 
