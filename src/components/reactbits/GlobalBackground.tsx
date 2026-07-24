@@ -3,10 +3,9 @@ import { motion } from 'framer-motion';
 export function GlobalBackground() {
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-paper-base">
-      {/* Animated Subtle Gradient */}
+      {/* Animated Subtle Gradient - Optimized for performance */}
       <motion.div
         animate={{
-          scale: [1, 1.1, 1],
           opacity: [0.3, 0.5, 0.3],
         }}
         transition={{
@@ -14,7 +13,7 @@ export function GlobalBackground() {
           repeat: Infinity,
           ease: 'easeInOut',
         }}
-        className="absolute -top-[50%] -left-[50%] w-[200%] h-[200%] bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.8)_0%,rgba(244,244,245,0)_70%)] opacity-40 mix-blend-overlay"
+        className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.8)_0%,rgba(244,244,245,0)_70%)] opacity-40 mix-blend-overlay will-change-[opacity]"
       />
       
       {/* Minimal Grid Pattern */}
@@ -31,22 +30,12 @@ export function GlobalBackground() {
         }}
       />
       
-      {/* Fuzzy Noise Overlay */}
-      <motion.div
-        initial={{ transform: 'translateX(-10%) translateY(-10%)' }}
-        animate={{
-          transform: 'translateX(10%) translateY(10%)',
-        }}
-        transition={{
-          repeat: Infinity,
-          duration: 0.2,
-          ease: 'linear',
-          repeatType: 'mirror',
-        }}
+      {/* Static Noise Overlay - Heavy animation removed to fix mobile lag */}
+      <div
         style={{
           backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")',
         }}
-        className="absolute -inset-[100%] opacity-[0.04]"
+        className="absolute inset-0 opacity-[0.04]"
       />
     </div>
   );
