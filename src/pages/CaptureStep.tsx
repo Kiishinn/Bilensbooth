@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from 'react';
-import { Camera, RefreshCw, Zap, ChevronDown } from 'lucide-react';
+import { Camera, RefreshCw, Zap, ChevronDown, ArrowLeft } from 'lucide-react';
 import { useCamera } from '../hooks/useCamera';
 import { useCapture } from '../hooks/useCapture';
 import { useShutterSound } from '../hooks/useShutterSound';
@@ -16,6 +16,7 @@ interface CaptureStepProps {
   onMirroredChange: (m: boolean) => void;
   onDeviceIdChange: (id: string) => void;
   onCaptureComplete: (photos: string[]) => void;
+  onBack: () => void;
 }
 
 export function CaptureStep({
@@ -28,6 +29,7 @@ export function CaptureStep({
   onMirroredChange,
   onDeviceIdChange,
   onCaptureComplete,
+  onBack,
 }: CaptureStepProps) {
   const {
     videoRef, stream, error, isLoading,
@@ -210,6 +212,19 @@ export function CaptureStep({
         </div>
 
       </div>
+
+      {/* Back Button */}
+      {!isCapturing && (
+        <div className="bg-neutral-800 border-t border-white/5 px-6 py-4">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 font-mono text-xs text-white/50 hover:text-white tracking-widest uppercase transition-colors"
+          >
+            <ArrowLeft size={14} />
+            Kembali
+          </button>
+        </div>
+      )}
     </div>
   );
 }

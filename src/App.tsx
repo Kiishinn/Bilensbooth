@@ -104,6 +104,10 @@ export default function App() {
     dispatch({ type: 'RESET' });
   }, []);
 
+  const handleBackToInitialize = useCallback(() => {
+    dispatch({ type: 'RESET' });
+  }, []);
+
   const handleFilterChange = useCallback((f: FilterType) => {
     dispatch({ type: 'SET_FILTER', payload: f });
   }, []);
@@ -161,6 +165,7 @@ export default function App() {
             onMirroredChange={handleMirroredChange}
             onDeviceIdChange={handleDeviceIdChange}
             onCaptureComplete={handleCaptureComplete}
+            onBack={handleBackToInitialize}
           />
         );
       case AppStep.CONTACT_SHEET:

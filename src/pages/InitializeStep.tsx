@@ -6,7 +6,6 @@ import { getHighResPhoto } from '../utils/db';
 import Swal from 'sweetalert2';
 import { SplitText } from '../components/reactbits/SplitText';
 import { TiltedCard } from '../components/reactbits/TiltedCard';
-import { ShinyText } from '../components/reactbits/ShinyText';
 
 interface InitializeStepProps {
   onContinue: () => void;
@@ -135,7 +134,6 @@ export function InitializeStep({ onContinue }: InitializeStepProps) {
 
         {/* Main CTA */}
         <div className="relative z-10">
-          <div className="absolute inset-0 bg-blood-red/20 blur-2xl rounded-full animate-pulse"></div>
           <button
             onClick={onContinue}
             className="group relative flex items-center gap-4 bg-ink-black text-paper-base font-mono text-lg sm:text-xl px-12 py-6 uppercase border-4 border-ink-black tracking-widest hover:bg-blood-red hover:border-blood-red transition-all duration-300 hard-shadow hover:translate-x-[-4px] hover:translate-y-[-4px] hover:shadow-hard overflow-hidden"
@@ -143,7 +141,7 @@ export function InitializeStep({ onContinue }: InitializeStepProps) {
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
             <Camera size={26} className="group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300 relative z-10" />
-            <ShinyText text="Mulai Sesi Foto" className="font-bold relative z-10" />
+            <span className="relative z-10 font-bold">Mulai Sesi Foto</span>
             <ArrowRight size={26} className="group-hover:translate-x-3 transition-transform duration-300 relative z-10" />
           </button>
         </div>
@@ -241,7 +239,7 @@ export function InitializeStep({ onContinue }: InitializeStepProps) {
                 disabled={isLoadingHighRes}
                 className="flex-[2] py-4 font-mono font-bold text-sm uppercase tracking-widest border-4 border-ink-black bg-kodak-yellow text-ink-black btn-interact disabled:opacity-50"
               >
-                <ShinyText text="UNDUH ULANG" />
+                UNDUH ULANG
               </button>
             </div>
           </div>
